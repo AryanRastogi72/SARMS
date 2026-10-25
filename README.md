@@ -11,15 +11,17 @@
 
 <br/><br/>
 
-# SARMS
+# OnTrack
 
-### Student Academic Records Management System
+### Academic records and analytics for students, faculty and admins
+
+<sub>Formerly <b>SARMS</b> (Student Academic Records Management System)</sub>
 
 *A university records system that stores grades well, extended so that students, faculty and admins can act on them earlier.*
 
 </div>
 
-> **Credit.** SARMS began as a four-person team project at [top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS). Everything up to commit `ef77690` is shared team work. This fork is maintained by Aryan Rastogi, and **everything after that commit is my solo work**. The [CHANGELOG](CHANGELOG.md) separates the two line by line, and every feature below is labelled **Team** or **Solo**.
+> **Credit.** OnTrack began as **SARMS**, a four-person team project at [top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS). Everything up to commit `ef77690` is shared team work. This fork, renamed OnTrack, is maintained by Aryan Rastogi, and **everything after that commit is my solo work**. The [CHANGELOG](CHANGELOG.md) separates the two line by line, and every feature below is labelled **Team** or **Solo**.
 
 ---
 
@@ -52,7 +54,7 @@ SARMS v1.0 (team) digitised the record lifecycle: registration, marks, result pu
 
 ## Who it's for
 
-| Persona | Goal | Pain today | What SARMS gives them |
+| Persona | Goal | Pain today | What OnTrack gives them |
 |---|---|---|---|
 | **Student** | Graduate on time with a good CGPA | Works out credits remaining by hand; only sees grades after results | **My Progress**: CGPA trend, credits remaining, pace needed per semester *(Solo)* |
 | **Faculty** | Help struggling students before finals | No class-level view; scans long marks tables | **Analytics**: a short "needs attention" list for their own courses, with reasons *(Solo)* |
@@ -122,7 +124,7 @@ All analytics screens run on **clearly labelled demo data**: 40 fictional studen
 | [Process](product/process.md) | Team Waterfall (v1.0) vs. solo iterative sprints, and test results | Solo |
 | [SRS](docs/SRS%20Documentation.pdf), [DFD & data dictionary](docs/DFD%20Model%20and%20Data%20Dictionary%20Documentation.pdf), [use cases](docs/Use%20Case%20Documentation.pdf), [class](docs/Class%20Diagram%20Documentation.pdf) and [sequence](docs/Sequence%20Diagram%20Documentation.pdf) diagrams | Formal SDLC artifacts produced before implementation | Team |
 
-The PRD's success metrics are hypotheses for a real deployment (for example, "time for an admin to produce a department summary"). SARMS has no production users, so no outcome numbers are claimed.
+The PRD's success metrics are hypotheses for a real deployment (for example, "time for an admin to produce a department summary"). OnTrack has no production users, so no outcome numbers are claimed.
 
 ---
 
@@ -217,8 +219,8 @@ cd backend
 ### 1. Clone
 
 ```bash
-git clone https://github.com/AryanRastogi72/SARMS.git
-cd SARMS
+git clone https://github.com/AryanRastogi72/OnTrack.git
+cd OnTrack
 ```
 
 ### 2. Configure
@@ -298,7 +300,7 @@ From the [PRD](product/PRD.md). Done items are solo work.
 
 ## Credits
 
-**Original team project** ([top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS)), up to commit `ef77690`:
+**Original team project, SARMS** ([top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS)), up to commit `ef77690`:
 
 <table>
   <tr>
