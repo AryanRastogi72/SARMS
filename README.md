@@ -2,14 +2,12 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/status-active-brightgreen?style=flat-square" />
 <img src="https://img.shields.io/badge/java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white" />
 <img src="https://img.shields.io/badge/spring_boot-3.2-6DB33F?style=flat-square&logo=springboot&logoColor=white" />
 <img src="https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=black" />
-<img src="https://img.shields.io/badge/mongodb-atlas-47A248?style=flat-square&logo=mongodb&logoColor=white" />
-<img src="https://img.shields.io/badge/tailwind_css-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+<img src="https://img.shields.io/badge/mongodb-7-47A248?style=flat-square&logo=mongodb&logoColor=white" />
 <img src="https://img.shields.io/badge/JWT-stateless_auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white" />
-<img src="https://img.shields.io/badge/selenium-E2E_tests-43B02A?style=flat-square&logo=selenium&logoColor=white" />
+<img src="https://img.shields.io/badge/recharts-analytics-0A1F44?style=flat-square" />
 
 <br/><br/>
 
@@ -17,212 +15,241 @@
 
 ### Student Academic Records Management System
 
-*A university ERP built with React and Spring Boot, developed through a complete SDLC following the Waterfall Model —
-from SRS and UML design artifacts through to implementation and E2E testing.*
+*A university records system that stores grades well, extended so that students, faculty and admins can act on them earlier.*
 
 </div>
 
+> **Credit.** SARMS began as a four-person team project at [top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS). Everything up to commit `ef77690` is shared team work. This fork is maintained by Aryan Rastogi, and **everything after that commit is my solo work**. The [CHANGELOG](CHANGELOG.md) separates the two line by line, and every feature below is labelled **Team** or **Solo**.
+
 ---
 
-## Table of Contents
+## Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
+- [The problem](#the-problem)
+- [Who it's for](#who-its-for)
+- [Features](#features)
+- [Product documents](#product-documents)
+- [Tech stack](#tech-stack)
 - [Architecture](#architecture)
-- [Engineering Decisions](#engineering-decisions)
-- [Software Engineering Artifacts](#software-engineering-artifacts)
-- [Development Lifecycle](#development-lifecycle)
-- [Getting Started](#getting-started)
-- [Future Enhancements](#future-enhancements)
-- [Contributors](#contributors)
+- [Design decisions](#design-decisions)
+- [Testing](#testing)
+- [Getting started](#getting-started)
+- [Known issues](#known-issues)
+- [Roadmap](#roadmap)
+- [Credits](#credits)
 
 ---
 
-## Overview
+## The problem
 
-SARMS is a university ERP that simulates real institutional workflows — automated semester promotion, graduation detection, credit-capped registration, and configurable academic terms — all secured behind stateless JWT authentication and role-isolated portals for Admins, Faculty, and Students.
+Universities store academic records, but they rarely *use* them. Marks and grades go in, and a transcript comes out at the end of the semester. By then it is too late to act:
 
-Built by a four-person team following the **Waterfall Model**, with formal SRS documentation, DFD models, and UML class and sequence diagrams produced before a single line of code was written.
+- **Students** can't easily tell whether they're on track to graduate, or whether their CGPA is rising or falling.
+- **Faculty** don't see which students are struggling until results are published.
+- **Admin staff** rebuild department performance reports in Excel every term, and have no evidence of which parts of the system people actually use.
+
+SARMS v1.0 (team) digitised the record lifecycle: registration, marks, result publication, promotion and graduation. My solo work turns it from a **system of record** into a **system of insight**, using data the system already holds. The full framing is in [product/problem_statement.md](product/problem_statement.md).
+
+## Who it's for
+
+| Persona | Goal | Pain today | What SARMS gives them |
+|---|---|---|---|
+| **Student** | Graduate on time with a good CGPA | Works out credits remaining by hand; only sees grades after results | **My Progress**: CGPA trend, credits remaining, pace needed per semester *(Solo)* |
+| **Faculty** | Help struggling students before finals | No class-level view; scans long marks tables | **Analytics**: a short "needs attention" list for their own courses, with reasons *(Solo)* |
+| **Admin staff** | Publish results on time; report to the dean | Builds department reports in Excel; no usage evidence | One-click results *(Team)*, **Analytics** with filters and **Feature Usage** *(Solo)* |
+
+These are proto-personas built from the team's SRS and common university workflows. They haven't been validated with interviews yet ([product/personas.md](product/personas.md)).
 
 ---
 
-## Key Features
+## Features
+
+### Solo additions (after the fork)
+
+All analytics screens run on **clearly labelled demo data**: 40 fictional students (`DEMO-*`) and 30 days of fictional page views. Every view shows a "Demo data" badge while those records exist. No real users or results are claimed.
+
+**Academic analytics dashboard** (admin and faculty)
+- Pass rate and grade distribution per course, with the lowest pass rates first. Admins can filter by department and semester.
+- A "Needs attention" list for the current semester, one row per student, with the reason for each flag: marks below the pass line, or CGPA below a cut-off. Both thresholds are config values.
+- Faculty see only the courses they teach; the server enforces this.
+
+![Academic analytics dashboard](docs/screenshots/analytics-dashboard.png)
+
+**Student progress view**
+- CGPA trend line with SGPA per semester.
+- Credits earned, in progress and remaining against a configurable graduation requirement, plus the credits per semester needed versus the 25-credit cap, and an "on track / behind pace" status.
+- Students can only see their own progress.
+
+![Student progress view](docs/screenshots/student-progress.png)
+
+**Feature usage analytics** (admin)
+- Page views per day, most-used pages, views per user, and active users by role over 7, 30 or 90 days.
+- Each event stores only the page, the role and a pseudonymous user hash. No names, grades or record content.
+
+![Feature usage analytics](docs/screenshots/feature-usage.png)
+
+**Security fix: password reset**
+- In v1.0, `POST /api/auth/forgot-password` reset any account, admin included, given only its ID. It now requires the email on the student or faculty record, refuses admin accounts, and returns the same error for every failure so IDs can't be probed.
+
+**Product layer**
+- Problem statement, personas, a PRD with MoSCoW priorities and success metrics, and a process document ([product/](product/)).
+
+### Original team project (v1.0)
 
 | Feature | Description |
 |---|---|
-| **Three Role-Based Portals** | Isolated dashboards for Admin, Faculty, and Student — each with discrete permissions and UI. |
-| **Stateless JWT Authentication** | HMAC-SHA256 signed tokens with role-based endpoint guarding via Spring Security. |
-| **One-Click Result Engine** | Bulk grade finalization, SGPA/CGPA recomputation, and semester promotion in a single atomic operation. |
-| **Auto-Enrollment Pipeline** | Students automatically enrolled in next-semester core courses upon result publication. |
-| **Graduation Detection** | Students completing semester 8 are automatically marked as graduated and deactivated. |
-| **Double Authentication** | Destructive admin operations require real-time credential re-verification server-side — not a dialog box. |
-| **Configurable Academic Clock** | Admin-controlled Monsoon/Spring term system governing course visibility and registration windows. |
-| **Credit-Capped Registration** | Hard 25-credit ceiling with live tracking of core vs. elective allocation. |
-| **Flexible Grading Engine** | Weighted components, "Best N of M" quiz policies, and automatic percentage-to-grade mapping. |
-| **Self-Service Password Reset** | Two-step forgot-password flow with ID verification and BCrypt re-hashing. |
+| **Three role-based portals** | Separate Admin, Faculty and Student portals with role-specific permissions. |
+| **Stateless JWT authentication** | HMAC-SHA256 tokens with role-based endpoint guards in Spring Security. |
+| **One-click result engine** | Bulk grade finalization, SGPA/CGPA recomputation and semester promotion in one operation. |
+| **Auto-enrollment** | Students are enrolled in next-semester core courses when results are published. |
+| **Graduation detection** | Students who complete semester 8 are marked graduated and deactivated. |
+| **Double authentication** | Destructive admin actions require the admin's credentials again, checked server-side. |
+| **Configurable academic clock** | Admin-controlled Monsoon/Spring terms that govern course visibility and registration. |
+| **Credit-capped registration** | Hard 25-credit ceiling with locked core courses and live credit tracking. |
+| **Flexible grading engine** | Weighted components, "Best N of M" quiz policies, automatic percentage-to-grade mapping. |
+| **Academic report** | SGPA by semester chart, transcript and PDF export. |
+| **Self-service password reset** | Two-step forgot-password flow with BCrypt re-hashing (identity check tightened after the fork, see above). |
 
 ---
 
-## Tech Stack
+## Product documents
+
+| Document | What it covers | By |
+|---|---|---|
+| [Problem statement](product/problem_statement.md) | What v1.0 solves, what's still unsolved, goals and non-goals | Solo |
+| [Personas](product/personas.md) | Student, faculty and admin proto-personas | Solo |
+| [PRD](product/PRD.md) | 10 user stories with MoSCoW priority, success metrics, risks, release plan | Solo |
+| [Process](product/process.md) | Team Waterfall (v1.0) vs. solo iterative sprints, and test results | Solo |
+| [SRS](docs/SRS%20Documentation.pdf), [DFD & data dictionary](docs/DFD%20Model%20and%20Data%20Dictionary%20Documentation.pdf), [use cases](docs/Use%20Case%20Documentation.pdf), [class](docs/Class%20Diagram%20Documentation.pdf) and [sequence](docs/Sequence%20Diagram%20Documentation.pdf) diagrams | Formal SDLC artifacts produced before implementation | Team |
+
+The PRD's success metrics are hypotheses for a real deployment (for example, "time for an admin to produce a department summary"). SARMS has no production users, so no outcome numbers are claimed.
+
+---
+
+## Tech stack
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | React 19 · Tailwind CSS 3 · Vite · React Router 6 · Recharts · Axios |
+| **Frontend** | React 19 · Tailwind CSS 3 · Vite · React Router · Recharts · Axios |
 | **Backend** | Java 17 · Spring Boot 3.2 · Spring Security · Spring Data MongoDB |
-| **Auth** | JWT (jjwt 0.12) · BCrypt · Stateless sessions · Per-request token filter |
-| **Database** | MongoDB Atlas (cloud NoSQL) |
-| **Testing** | Selenium WebDriver + JUnit 5 · Playwright |
-| **API Docs** | Springdoc OpenAPI / Swagger UI |
+| **Auth** | JWT (jjwt 0.12) · BCrypt · stateless sessions |
+| **Database** | MongoDB (Atlas or local 7.0) |
+| **Testing** | JUnit 5 + Mockito · Postman/Newman · Selenium WebDriver · Playwright |
+| **API docs** | Springdoc OpenAPI / Swagger UI |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              React SPA  (Vite + React Router)           │
-│     Admin Portal  ·  Faculty Portal  ·  Student Portal  │
-└──────────────────────────┬──────────────────────────────┘
-                           │  REST  (Axios + JWT Bearer)
-┌──────────────────────────▼──────────────────────────────┐
-│                  Spring Boot Backend                    │
-│                                                         │
-│   JwtAuthFilter → Controller → Service → Repository     │
-│                                    │                    │
-│                         Spring Security Context         │
-└──────────────────────────┬──────────────────────────────┘
-                           │  Spring Data MongoDB
-┌──────────────────────────▼──────────────────────────────┐
-│                     MongoDB Atlas                       │
-│   users · courses · enrollments · marks · semesters     │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│               React SPA  (Vite + React Router)               │
+│   Admin Portal  ·  Faculty Portal  ·  Student Portal          │
+│   + Analytics · Feature Usage · My Progress   (solo)          │
+└──────────────────────────────┬───────────────────────────────┘
+                               │  REST  (Axios + JWT Bearer)
+┌──────────────────────────────▼───────────────────────────────┐
+│                     Spring Boot Backend                       │
+│   JwtAuthFilter → Controller → Service → Repository           │
+│   + AnalyticsService · UsageService · DemoDataSeeder (solo)   │
+└──────────────────────────────┬───────────────────────────────┘
+                               │  Spring Data MongoDB
+┌──────────────────────────────▼───────────────────────────────┐
+│                           MongoDB                             │
+│   users · students · courses · enrollments · marks · ...      │
+│   + usage_events (solo)                                       │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-Every request passes through a custom `JwtAuthFilter` that validates the token and injects the user's identity and role into the Spring Security context. The backend follows strict **Controller → Service → Repository** layering, with repositories mapping directly to MongoDB Atlas collections.
+Analytics are computed from existing collections (final grades in student records, in-progress marks rosters), so no new academic data is collected.
 
 ---
 
-## Engineering Decisions
+## Design decisions
 
-**Double Authentication for Critical Operations**
-Publishing results and wiping student data require the admin to re-enter credentials at the point of action, verified server-side against the BCrypt hash — not just a frontend confirmation dialog.
+### Solo additions
 
-**Automated Semester Lifecycle Engine**
-A single "Upload Results" action atomically finalizes grades for all enrolled students → recomputes SGPA → promotes to next semester → auto-enrolls in department-specific core courses → shifts the global academic term. One transactional flow.
+- **Score marks only against what's been entered.** Mid-semester, the end-sem exam hasn't happened. Counting it as zero would flag almost everyone, so "marks so far" is the score divided by the weight of components already entered.
+- **Rule-based flags with visible reasons, not a predictive model.** Every flag says why. The UI says "needs attention", not "at risk", and faculty only see their own students (PRD §7, risks).
+- **Demo data that can't be mistaken for real data.** Demo students have `DEMO-*` roll numbers and demo events carry `demo=true`, so every API response reports `demoData` and the UI shows a badge. Turn it off with `sarms.demo-data=false`.
+- **Usage events take the role from the JWT, never the request body.** A route outside the caller's own portal is rejected, so a student can't log views as an admin.
+- **One error message for every failed reset.** The reset endpoint can't be used to find out which IDs exist.
 
-**Automatic Graduation Detection**
-Students completing semester 8 are programmatically marked inactive. Accounts remain accessible for transcript viewing but are locked out of registration and course workflows.
+### Original team decisions
 
-**Configurable Monsoon / Spring Academic Clock**
-The admin shifts the university's active term between Monsoon (odd semesters) and Spring (even semesters). Controls course catalog visibility, student batch eligibility, and enforces semester-type parity rules.
-
-**Credit-Capped Registration with Core Locking**
-Core departmental courses are pre-enrolled and locked. Students modify only elective selections within a hard 25-credit ceiling, with real-time visual feedback on remaining capacity.
-
-**"Best N of M" Grading Policy**
-Faculty define policies like "Best 3 of 5 quizzes" — the engine automatically selects top scores and scales them during grade computation.
-
-**Idempotent Database Seeding**
-`DataSeeder` checks for existing data before inserting, making it safe to restart the server any number of times without duplication. It also force-syncs all user passwords on every boot to ensure cross-JDK BCrypt compatibility.
-
-**Full System Reset with Selective Preservation**
-The admin "Wipe" action (requiring typed confirmation) deletes all student accounts, enrollments, and marks while preserving the course catalog, faculty records, and grading configurations — designed for clean end-of-year resets.
-
-**Stateless Architecture**
-No session cookies. No server-side session stores. The entire auth layer is stateless — horizontal scaling requires zero session affinity.
+- **Double authentication for critical operations:** publishing results and wiping data require the admin's credentials again, checked server-side against the BCrypt hash.
+- **Automated semester lifecycle:** one "Upload Results" action finalizes grades, recomputes SGPA, promotes students, auto-enrolls core courses and shifts the academic term.
+- **Monsoon/Spring academic clock:** controls course visibility, batch eligibility and semester parity rules.
+- **"Best N of M" grading:** faculty define policies like "best 3 of 5 quizzes" and the engine scales the top scores.
+- **Idempotent seeding:** the seeder checks for existing data before inserting.
+- **Stateless architecture:** no server-side sessions, so horizontal scaling needs no session affinity.
 
 ---
 
-## Software Engineering Artifacts
+## Testing
 
-Produced during the formal SDLC phases before implementation began:
+| What | Result | By |
+|---|---|---|
+| Postman API collection (28 requests at the fork point) | 35/35 passing, as reported by the team (run report not stored in the repo) | Team |
+| Selenium + JUnit end-to-end tests, Playwright specs | Need a running app; not re-run after the fork | Team |
+| JUnit unit tests for analytics, progress, usage and password reset | **22 tests, all passing** (`AnalyticsServiceTest`, `AnalyticsControllerTest`, `UsageServiceTest`, `AuthServiceResetTest`) | Solo |
+| Postman folders 8 and 9 (13 requests, including access-denied cases) | All passing against a local server (Newman) | Solo |
+| Full collection re-run on a fresh local database | 46 of 47 assertions passed; the one failure is a team test that needs a student from the team's original database | Solo run |
 
-| Document | Description |
-|---|---|
-| [**SRS Document**](docs/SRS%20Documentation.pdf) | Complete functional and non-functional requirements specification. |
-| [**DFD Model & Data Dictionary**](docs/DFD%20Model%20and%20Data%20Dictionary%20Documentation.pdf) | Level 0 & Level 1 data flow diagrams with formal definitions of all data elements and constraints. |
-| [**Use Case Document**](docs/Use%20Case%20Documentation.pdf) | Actor-driven use case specifications for all system interactions. |
-| [**Class Diagram**](docs/Class%20Diagram%20Documentation.pdf) | UML class diagram mapping entities, relationships, and service boundaries. |
-| [**Sequence Diagram**](docs/Sequence%20Diagram%20Documentation.pdf) | Interaction diagrams for critical flows including authentication and result publishing. |
+Run the solo unit tests (no database needed):
 
----
-
-## Development Lifecycle
-
-This project followed the **Waterfall Model** through a complete SDLC:
-
-```
-Requirement Analysis  →  System Design  →  Implementation  →  Testing
-        │                     │                  │                │
-   SRS · Stakeholder      DFD · UML           React +        Selenium
-     interviews            artifacts         Spring Boot    WebDriver +
-                                                            Playwright
+```bash
+cd backend
+./apache-maven-3.9.6/bin/mvn test -Dtest='Analytics*Test,Usage*Test,AuthServiceResetTest' -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-The sequential approach locked design decisions before code was written, resulting in a stable, well-documented system with traceable requirements from SRS through to test coverage.
+> The Postman collection includes the team's "Upload Results" and reset requests, so running it **changes the data**. To get clean demo data back, drop the `sarms_db` database and restart the backend.
 
 ---
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Java 17
-- Node.js 18+
-- Maven 3.9+
-- A MongoDB Atlas cluster (free tier works)
+- Java 17, Node.js 18+
+- MongoDB: a local MongoDB 7.0 server, or a MongoDB Atlas cluster (free tier works)
 
-### 1 — Clone
+### 1. Clone
 
 ```bash
-git clone https://github.com/top-of-the-code/SARMS.git
+git clone https://github.com/AryanRastogi72/SARMS.git
 cd SARMS
 ```
 
-### 2 — Configure environment
+### 2. Configure
 
-```bash
-cd backend
-cp .env.example .env
-```
-
-Edit `backend/.env`:
+Create `backend/.env` (it's gitignored):
 
 ```dotenv
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/sarms_db?retryWrites=true&w=majority
-JWT_SECRET=<a-long-random-string-for-HMAC-SHA256>
+# Local MongoDB, or your Atlas connection string
+MONGO_URI=mongodb://127.0.0.1:27017/sarms_db
+JWT_SECRET=<a-long-random-string-at-least-32-bytes>
 ```
 
-### 3 — Start the backend
+Optional settings in `backend/src/main/resources/application.properties`:
 
-<details>
-<summary>Windows (PowerShell)</summary>
+| Property | Default | Purpose |
+|---|---|---|
+| `sarms.demo-data` | `true` | Seed the fictional `DEMO-*` students and usage events |
+| `sarms.analytics.pass-percent` | `40` | Pass line for "needs attention" flags |
+| `sarms.analytics.cgpa-cutoff` | `5.0` | CGPA below which a student is flagged |
+| `sarms.graduation-credits` | `160` | Credits required to graduate (placeholder; set per program) |
 
-```powershell
-cd backend
-$env:JAVA_HOME="C:\Program Files\Java\jdk-17"
-$env:PATH="$env:JAVA_HOME\bin;$env:PATH"
-apache-maven-3.9.6\bin\mvn clean compile spring-boot:run
-```
-
-</details>
-
-<details>
-<summary>macOS / Linux</summary>
+### 3. Start the backend
 
 ```bash
 cd backend
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
-export PATH="$JAVA_HOME/bin:$PATH"
-./apache-maven-3.9.6/bin/mvn clean compile spring-boot:run
+./apache-maven-3.9.6/bin/mvn spring-boot:run
 ```
 
-</details>
+On Windows, use `apache-maven-3.9.6\bin\mvn.cmd`. The API runs at `http://localhost:8080`; on first start the seeders build the course catalog and the demo data.
 
-Wait for `Started SarmsApplication in X seconds`. API is live at `http://localhost:8080`.
-
-### 4 — Start the frontend
+### 4. Start the frontend
 
 ```bash
 cd frontend
@@ -230,32 +257,48 @@ npm install
 npm run dev
 ```
 
-App is live at `http://localhost:5173`.
+The app runs at `http://localhost:5173`.
+
+### Local demo accounts
+
+These are the seeder's development defaults. Don't use them outside a local machine.
+
+| Role | ID | Password |
+|---|---|---|
+| Admin | `ADM-001` | `password123` |
+| Faculty | `FAC-CSE-001` | `password123` |
+| Demo student (behind pace) | `DEMO-CSE-09` | `password123` |
 
 ---
 
-## Future Enhancements
+## Known issues
 
-- [ ] **Email Notifications** — Registration confirmation and password reset via email
-- [ ] **Attendance Tracking** — Faculty-managed per-course attendance
-- [ ] **Course Feedback System** — End-of-semester student ratings
-- [ ] **Analytics Dashboard** — Department-wide performance, pass/fail ratios, enrollment trends
-- [ ] **Elective Bidding** — Priority-based allocation for limited-seat courses
-- [ ] **Docker Compose** — One-command deployment with containerized services
-- [ ] **CI/CD Pipeline** — Automated testing and deployment via GitHub Actions
-- [ ] **Audit Logging** — Immutable trail of all grade modifications and admin actions
+- **The team's seeder resets passwords on every startup.** `DataSeeder.ensureAdminUser()` sets the admin and every faculty and student password back to `password123` each time the backend starts. That's fine for a local demo but must be removed before any real deployment. *(Team code, not yet changed.)*
+- **Any signed-in user can read any student's record** through the v1.0 endpoint `GET /api/students/{rollNo}`. The new progress endpoint restricts students to their own record, but the original one doesn't. *(Team code, not yet changed.)*
+- **The password reset fix is a mitigation.** Knowing someone's email is weak proof; the proper fix is an emailed one-time reset link.
+- **The team's Selenium `ForgotPasswordTest` now fails by design**, because it resets `ADM-001` by ID alone.
+- **Usage analytics count page views**, not clicks or time spent inside a page.
+
+---
+
+## Roadmap
+
+From the [PRD](product/PRD.md). Done items are solo work.
+
+- [x] Course analytics: pass rates and grade distributions (US-1, US-5)
+- [x] "Needs attention" flags from marks and CGPA (US-2)
+- [x] Student graduation progress and CGPA trend (US-3, US-4)
+- [x] Feature usage analytics (US-6)
+- [ ] Attendance tracking, so flags can use attendance (US-7)
+- [ ] Emailed one-time password reset links
+- [ ] CSV/PDF export of analytics views (US-9)
+- [ ] Email notifications, elective bidding, audit logging, Docker Compose, CI (from the team's v1.0 list)
 
 ---
 
 ## Credits
 
-SARMS started as a four-person team project at [top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS), built by the contributors below. Everything up to and including commit `ef77690` (the fork point) is shared team work.
-
-This repository is a fork maintained by Aryan Rastogi. **Every change after the fork point is my solo work.** See [CHANGELOG.md](CHANGELOG.md) for a line-by-line split between the original team's features and my additions.
-
-## Contributors
-
-Original team project:
+**Original team project** ([top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS)), up to commit `ef77690`:
 
 <table>
   <tr>
@@ -266,10 +309,4 @@ Original team project:
   </tr>
 </table>
 
----
-
-<div align="center">
-
-Built with ☕ Java + ⚛️ React
-
-</div>
+**Solo work after the fork** (analytics, progress view, usage analytics, security fix, product documents): Aryan Rastogi. See the [CHANGELOG](CHANGELOG.md).

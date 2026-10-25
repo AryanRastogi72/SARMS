@@ -10,6 +10,7 @@ This file separates the original team project from work done after the fork.
 ### Added
 - `CHANGELOG.md` (this file) and a Credits section in the README.
 - `product/` folder: problem statement, personas, PRD for the next version, and a development process document.
+- README rewritten to lead with the problem and users, label every feature Team or Solo, and list known issues; screenshots of the solo features in `docs/screenshots/` (demo data).
 - **Academic analytics dashboard** (PRD US-1, US-2, US-5) for admins (`/admin/analytics`) and faculty (`/faculty/analytics`, own courses only):
   - pass rate and grade distribution per course from final grades, with department/semester filters for admins;
   - "needs attention" list for the active semester: marks below the pass line (scored only against components entered so far) or CGPA below a cut-off, each with its reason. Thresholds are config values.
