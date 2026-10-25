@@ -140,10 +140,10 @@ public class DemoDataSeeder implements CommandLineRunner {
         for (int day = 29; day >= 0; day--) {
             LocalDate date = today.minusDays(day);
             boolean weekend = date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
-            for (var role : usersPerRole.entrySet()) {
+            for (var role : new TreeMap<>(usersPerRole).entrySet()) {   // sorted: same events on every run
                 for (int u = 1; u <= role.getValue(); u++) {
                     String userHash = UsageService.hash(DEMO_PREFIX + role.getKey() + "-" + u);
-                    for (var odds : visitOdds.get(role.getKey()).entrySet()) {
+                    for (var odds : new TreeMap<>(visitOdds.get(role.getKey())).entrySet()) {
                         if (rand.nextDouble() < odds.getValue() * (weekend ? 0.4 : 1)) {
                             Instant at = date.atStartOfDay(ZoneOffset.UTC).toInstant().plusSeconds(8 * 3600 + rand.nextInt(12 * 3600));
                             events.add(new UsageEvent(null, odds.getKey(), role.getKey(), userHash, at, true));

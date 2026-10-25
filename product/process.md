@@ -24,7 +24,11 @@ All of this was **team work** by the four original contributors.
 | Implementation | React frontend, Spring Boot backend, MongoDB Atlas |
 | Testing | Postman API collection (`postman-api/`), Selenium + JUnit tests (`backend/src/test`), Playwright specs (`frontend/tests`) |
 
-**Testing result.** The team reported a 35/35 passing run of the Postman API tests. At the fork point the committed collection (`postman-api/SARMS_Postman_Collection.json`) contained 28 requests with test scripts; the run report itself is not stored in the repository. The 35/35 result is the team's, not part of the solo fork. (The 9 requests in folder "8. Analytics & Usage" were added after the fork and are solo work; they have not been run against a live server yet.)
+**Testing result.** The team reported a 35/35 passing run of the Postman API tests. At the fork point the committed collection (`postman-api/SARMS_Postman_Collection.json`) contained 28 requests with test scripts; the run report itself is not stored in the repository. The 35/35 result is the team's, not part of the solo fork. (The 9 requests in folder "8. Analytics & Usage" were added after the fork and are solo work.)
+
+**Solo re-run after the fork (2026-10-25, fresh local MongoDB 7.0 with demo data).** Newman run of all 37 requests: 46 of 47 assertions passed, including all 11 in the new folder. The one failure is the team's "Auth - Forgot Password" test, which expects student `STUD-2025-004` from the team's original database; on a fresh database that user doesn't exist, so the API correctly returns 400.
+
+Note: the collection includes the team's admin "Upload Results" and reset requests, so a run changes the data (for example, it publishes semester 4 before end-sem marks exist). To get clean demo data back, drop the `sarms_db` database and restart the backend; the seeders rebuild it.
 
 ## Phase B: solo fork (iterative)
 

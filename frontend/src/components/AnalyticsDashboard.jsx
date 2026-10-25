@@ -59,7 +59,15 @@ export default function AnalyticsDashboard({ showFilters }) {
   const lowest = rows.slice(0, LOWEST_N).map(r => ({ ...r, passPct: Math.round(r.passRate * 100) }));
   const course = rows.find(r => r.courseCode === selected);
   const distData = course ? Object.entries(course.distribution).map(([grade, count]) => ({ grade, count })) : [];
-  const flaggedStudents = new Set(attention.rows.map(f => f.rollNo)).size;
+  // One row per student: flags come per (student, course), so CGPA reasons would otherwise repeat per course
+  const students = new Map();
+  attention.rows.filter(f => !department || f.departmentCode === department).forEach(f => {
+    const s = students.get(f.rollNo) ?? { ...f, courses: [], reasons: new Set() };
+    s.courses.push(f);
+    f.reasons.forEach(r => s.reasons.add(r.startsWith('Current marks') ? `${f.courseCode}: ${r}` : r));
+    students.set(f.rollNo, s);
+  });
+  const flagged = [...students.values()];
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -85,7 +93,7 @@ export default function AnalyticsDashboard({ showFilters }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Tile icon={BookOpen} label="Courses with results" value={rows.length} sub={`${totalGraded} final grades`} />
         <Tile icon={Percent} label="Overall pass rate" value={`${Math.round(overallPass * 100)}%`} sub="Grades D and above" />
-        <Tile icon={Users} label="Students needing attention" value={flaggedStudents} sub="Current semester" />
+        <Tile icon={Users} label="Students needing attention" value={flagged.length} sub={`Current semester${department ? `, ${department}` : ''}`} />
       </div>
 
       {rows.length === 0 ? (
@@ -142,27 +150,29 @@ export default function AnalyticsDashboard({ showFilters }) {
           Flagged if marks entered so far are below {attention.passPercent}% or CGPA is below {attention.cgpaCutoff}.
           Marks are scored only against components already entered, so a missing end-sem exam doesn't count against anyone.
         </p>
-        {attention.rows.length === 0 ? (
+        {flagged.length === 0 ? (
           <p className="text-sm text-gray-500">No students flagged.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wider text-gray-400 border-b">
-                  <th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Course</th>
-                  <th className="py-2 pr-4 text-right">Marks so far</th><th className="py-2 pr-4 text-right">CGPA</th>
-                  <th className="py-2">Why</th>
+                  <th className="py-2 pr-4">Student</th><th className="py-2 pr-4 text-right">CGPA</th>
+                  <th className="py-2 pr-4">Flagged courses (marks so far)</th><th className="py-2">Why</th>
                 </tr>
               </thead>
               <tbody>
-                {attention.rows.map(f => (
-                  <tr key={f.rollNo + f.courseCode} className="border-b border-gray-50 align-top">
+                {flagged.map(f => (
+                  <tr key={f.rollNo} className="border-b border-gray-50 align-top">
                     <td className="py-2 pr-4"><p className="font-bold text-navy">{f.studentName}</p><p className="text-xs text-gray-400">{f.rollNo}</p></td>
-                    <td className="py-2 pr-4 font-semibold text-gray-600">{f.courseCode}</td>
-                    <td className="py-2 pr-4 text-right font-bold">{f.currentPercent ?? '—'}{f.currentPercent != null && '%'}</td>
                     <td className="py-2 pr-4 text-right font-bold">{f.cgpa ?? '—'}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">
+                      {f.courses.map(c => (
+                        <p key={c.courseCode}><span className="font-semibold text-gray-600">{c.courseCode}</span> {c.currentPercent ?? '—'}{c.currentPercent != null && '%'}</p>
+                      ))}
+                    </td>
                     <td className="py-2">
-                      {f.reasons.map(r => (
+                      {[...f.reasons].map(r => (
                         <p key={r} className="flex items-start gap-1.5 text-gray-700">
                           <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" aria-label="Needs attention" />{r}
                         </p>

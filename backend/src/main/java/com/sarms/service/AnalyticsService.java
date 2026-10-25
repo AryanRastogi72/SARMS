@@ -30,8 +30,8 @@ public class AnalyticsService {
                                 int graded, Map<String, Integer> distribution, double passRate,
                                 double avgGradePoints) {}
 
-    public record AttentionFlag(String rollNo, String studentName, String courseCode, String courseName,
-                                Double currentPercent, Double cgpa, List<String> reasons) {}
+    public record AttentionFlag(String rollNo, String studentName, String departmentCode, String courseCode,
+                                String courseName, Double currentPercent, Double cgpa, List<String> reasons) {}
 
     public record SemesterPoint(int semester, double sgpa, double cgpa, double creditsEarned) {}
 
@@ -120,7 +120,8 @@ public class AnalyticsService {
                 Double cgpa = s == null ? null : cgpa(s);
                 List<String> reasons = flagReasons(pct, cgpa, passPercent, cgpaCutoff);
                 if (!reasons.isEmpty()) {
-                    flags.add(new AttentionFlag(sm.getRollNo(), sm.getName(), course.getCode(), course.getName(),
+                    flags.add(new AttentionFlag(sm.getRollNo(), sm.getName(), course.getDepartmentCode(),
+                            course.getCode(), course.getName(),
                             pct, cgpa, reasons));
                 }
             }

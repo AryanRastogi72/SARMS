@@ -98,7 +98,7 @@ export default function StudentProgress() {
             <LineChart data={chartData} margin={{ top: 16, right: 24, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#475569', fontWeight: 700 }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: 600, color: '#0f172a' }} />
               <Legend iconType="plainline" wrapperStyle={{ fontSize: 12, fontWeight: 600 }} />
               <Line type="monotone" dataKey="CGPA" stroke={CGPA_COLOR} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }}>
