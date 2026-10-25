@@ -55,6 +55,12 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Demo students are built from the seeded core courses; without them they'd get empty records
+        if (courseRepo.findBySemesterAndCategoryAndDepartmentCode(1, "core", DEPTS.get(0)).isEmpty()) {
+            log.warn("No core courses found (database only partly seeded?) — skipping demo data. "
+                    + "Drop the sarms_db database and restart to reseed.");
+            return;
+        }
         if (studentRepo.countByRollNoStartingWith(DEMO_PREFIX) > 0) {
             log.info("Demo students already present — skipping.");
         } else {
