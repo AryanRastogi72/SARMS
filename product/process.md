@@ -24,7 +24,7 @@ All of this was **team work** by the four original contributors.
 | Implementation | React frontend, Spring Boot backend, MongoDB Atlas |
 | Testing | Postman API collection (`postman-api/`), Selenium + JUnit tests (`backend/src/test`), Playwright specs (`frontend/tests`) |
 
-**Testing result.** The team reported a 35/35 passing run of the Postman API tests. The committed collection (`postman-api/SARMS_Postman_Collection.json`) contains 28 requests with test scripts; the run report itself is not stored in the repository. This is the team's result, not part of the solo fork.
+**Testing result.** The team reported a 35/35 passing run of the Postman API tests. At the fork point the committed collection (`postman-api/SARMS_Postman_Collection.json`) contained 28 requests with test scripts; the run report itself is not stored in the repository. The 9 requests in folder "8. Analytics & Usage" were added after the fork and are solo work. This is the team's result, not part of the solo fork.
 
 ## Phase B: solo fork (iterative)
 

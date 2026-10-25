@@ -26,6 +26,7 @@ import TermControl from './pages/admin/TermControl';
 // Solo additions after fork
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import StudentProgress from './pages/student/StudentProgress';
+import UsageDashboard from './pages/admin/UsageDashboard';
 
 /**
  * App, top-level router.
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="results" element={<UploadResults />} />
             <Route path="term-control" element={<TermControl />} />
             <Route path="analytics" element={<AnalyticsDashboard showFilters />} />
+            <Route path="usage" element={<UsageDashboard />} />
           </Route>
 
           {/* ── Catch-all ─────────────────────────────────── */}

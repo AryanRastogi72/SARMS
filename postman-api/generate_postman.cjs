@@ -330,6 +330,67 @@ if(data.length > 0) { pm.environment.set("facultyId", data[0].facultyId); }`
 
 collection.item.push({ name: "7. Meta / Departments / Faculty", item: publicItems });
 
+// 8. ANALYTICS & USAGE (solo addition after fork). Runs after 6. Enrollments, so {{token}} is the student token.
+const analyticsItems = [];
+
+analyticsItems.push(createRequest(
+    "1. Analytics - Course Outcomes (Admin)", "GET", "/analytics/courses", "adminAuth", null,
+    `pm.test("Status 200", function () { pm.response.to.have.status(200); });
+var data = pm.response.json();
+pm.test("Has demoData flag and rows", function () {
+    pm.expect(data).to.have.property("demoData");
+    pm.expect(data.rows).to.be.an("array");
+});`
+));
+
+analyticsItems.push(createRequest(
+    "2. Analytics - Needs Attention (Admin)", "GET", "/analytics/attention", "adminAuth", null,
+    `pm.test("Status 200", function () { pm.response.to.have.status(200); });
+pm.test("Every flag has a reason", function () {
+    pm.response.json().rows.forEach(function (r) { pm.expect(r.reasons.length).to.be.above(0); });
+});`
+));
+
+analyticsItems.push(createRequest(
+    "3. Analytics - Course Outcomes as Student (Forbidden)", "GET", "/analytics/courses", "bearer", null,
+    `pm.test("Status 403", function () { pm.response.to.have.status(403); });`
+));
+
+analyticsItems.push(createRequest(
+    "4. Analytics - Own Progress (Student)", "GET", "/analytics/progress/{{studentRollNo}}", "bearer", null,
+    `pm.test("Status 200 or 404", function () { pm.expect(pm.response.code).to.be.oneOf([200, 404]); });`
+));
+
+analyticsItems.push(createRequest(
+    "5. Analytics - Other Student's Progress (Forbidden)", "GET", "/analytics/progress/DEMO-CSE-01", "bearer", null,
+    `pm.test("Status 403", function () { pm.response.to.have.status(403); });`
+));
+
+analyticsItems.push(createRequest(
+    "6. Usage - Record Page View (Student)", "POST", "/usage/events", "bearer",
+    { route: "/student/progress" },
+    `pm.test("Status 204", function () { pm.response.to.have.status(204); });`
+));
+
+analyticsItems.push(createRequest(
+    "7. Usage - Record Another Portal's Page (Rejected)", "POST", "/usage/events", "bearer",
+    { route: "/admin/analytics" },
+    `pm.test("Status 400", function () { pm.response.to.have.status(400); });`
+));
+
+analyticsItems.push(createRequest(
+    "8. Usage - Summary (Admin)", "GET", "/usage/summary?days=30", "adminAuth", null,
+    `pm.test("Status 200", function () { pm.response.to.have.status(200); });
+pm.test("30 zero-filled days", function () { pm.expect(pm.response.json().daily.length).to.eql(30); });`
+));
+
+analyticsItems.push(createRequest(
+    "9. Usage - Summary as Student (Forbidden)", "GET", "/usage/summary", "bearer", null,
+    `pm.test("Status 403", function () { pm.response.to.have.status(403); });`
+));
+
+collection.item.push({ name: "8. Analytics & Usage (solo addition)", item: analyticsItems });
+
 // Write the file
 fs.writeFileSync('SARMS_Postman_Collection.json', JSON.stringify(collection, null, 2));
 console.log("Postman collection generated successfully.");

@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Analytics (solo addition after fork)
                 .requestMatchers("/api/analytics/courses", "/api/analytics/attention").hasAnyRole("ADMIN", "FACULTY")
+                .requestMatchers("/api/usage/summary").hasRole("ADMIN")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

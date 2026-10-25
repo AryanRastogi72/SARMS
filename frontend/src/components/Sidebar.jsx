@@ -5,7 +5,7 @@ import api from '../services/api';
 import {
   LayoutDashboard, Clock, BookOpen, BarChart2,
   BookMarked, Edit3, Users, GraduationCap,
-  UserPlus, LogOut, ChevronRight, PieChart, Target,
+  UserPlus, LogOut, ChevronRight, PieChart, Target, Activity,
 } from 'lucide-react';
 
 // ── Nav link definitions per role ─────────────────────────────
@@ -28,6 +28,7 @@ const NAV_LINKS = {
     { to: '/admin/results', label: 'Upload Results', Icon: BarChart2 },
     { to: '/admin/term-control', label: 'Term Control', Icon: Clock },
     { to: '/admin/analytics', label: 'Analytics', Icon: PieChart },
+    { to: '/admin/usage', label: 'Feature Usage', Icon: Activity },
   ],
 };
 

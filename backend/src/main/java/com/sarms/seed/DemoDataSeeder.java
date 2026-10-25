@@ -3,6 +3,7 @@ package com.sarms.seed;
 import com.sarms.model.*;
 import com.sarms.repository.*;
 import com.sarms.service.MarksService;
+import com.sarms.service.UsageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -11,15 +12,19 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static com.sarms.service.AnalyticsService.DEMO_PREFIX;
 
 /**
  * DEMO DATA ONLY (solo addition after fork). Seeds 40 fictional students (roll numbers start with "DEMO-")
- * with graded semesters 1-3 and partial semester-4 marks, so the analytics views have something to show.
- * Every analytics response reports demoData=true while these records exist. Turn off with sarms.demo-data=false.
+ * with graded semesters 1-3 and partial semester-4 marks, plus 30 days of fictional page-view events, so the
+ * analytics views have something to show. Every analytics response reports demoData=true while these records exist. Turn off with sarms.demo-data=false.
  */
 @Component
 @Order(2)
@@ -35,23 +40,34 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final UserRepository userRepo;
     private final CourseRepository courseRepo;
     private final MarksRepository marksRepo;
+    private final UsageEventRepository usageRepo;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataSeeder(StudentRepository studentRepo, UserRepository userRepo, CourseRepository courseRepo,
-                          MarksRepository marksRepo, PasswordEncoder passwordEncoder) {
+                          MarksRepository marksRepo, UsageEventRepository usageRepo, PasswordEncoder passwordEncoder) {
         this.studentRepo = studentRepo;
         this.userRepo = userRepo;
         this.courseRepo = courseRepo;
         this.marksRepo = marksRepo;
+        this.usageRepo = usageRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
         if (studentRepo.countByRollNoStartingWith(DEMO_PREFIX) > 0) {
-            log.info("Demo data already present — skipping.");
-            return;
+            log.info("Demo students already present — skipping.");
+        } else {
+            seedStudents();
         }
+        if (usageRepo.existsByDemoTrueAndTimestampAfter(Instant.now().minus(30, ChronoUnit.DAYS))) {
+            log.info("Recent demo usage events already present — skipping.");
+        } else {
+            seedUsage();
+        }
+    }
+
+    private void seedStudents() {
         Random rand = new Random(42); // fixed seed: same demo data on every machine
         Map<String, Marks> rosters = new HashMap<>();
         String passwordHash = passwordEncoder.encode("password123");
@@ -107,6 +123,37 @@ public class DemoDataSeeder implements CommandLineRunner {
         }
         marksRepo.saveAll(rosters.values());
         log.info("Seeded {} DEMO students (fictional data, roll numbers {}*).", DEPTS.size() * STUDENTS_PER_DEPT, DEMO_PREFIX);
+    }
+
+    /** Fictional page views over the last 30 days: per-user daily visit probabilities, quieter at weekends. */
+    private void seedUsage() {
+        Random rand = new Random(7);
+        Map<String, Map<String, Double>> visitOdds = Map.of(
+                "student", Map.of("/student/courses", 0.5, "/student/report", 0.25, "/student/progress", 0.2, "/student/registration", 0.05),
+                "faculty", Map.of("/faculty/marks", 0.6, "/faculty/courses", 0.3, "/faculty/analytics", 0.25),
+                "admin", Map.of("/admin/courses", 0.5, "/admin/students", 0.4, "/admin/analytics", 0.4,
+                        "/admin/results", 0.1, "/admin/register", 0.1, "/admin/term-control", 0.05));
+        Map<String, Integer> usersPerRole = Map.of("student", DEPTS.size() * STUDENTS_PER_DEPT, "faculty", 8, "admin", 1);
+
+        List<UsageEvent> events = new ArrayList<>();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        for (int day = 29; day >= 0; day--) {
+            LocalDate date = today.minusDays(day);
+            boolean weekend = date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY;
+            for (var role : usersPerRole.entrySet()) {
+                for (int u = 1; u <= role.getValue(); u++) {
+                    String userHash = UsageService.hash(DEMO_PREFIX + role.getKey() + "-" + u);
+                    for (var odds : visitOdds.get(role.getKey()).entrySet()) {
+                        if (rand.nextDouble() < odds.getValue() * (weekend ? 0.4 : 1)) {
+                            Instant at = date.atStartOfDay(ZoneOffset.UTC).toInstant().plusSeconds(8 * 3600 + rand.nextInt(12 * 3600));
+                            events.add(new UsageEvent(null, odds.getKey(), role.getKey(), userHash, at, true));
+                        }
+                    }
+                }
+            }
+        }
+        usageRepo.saveAll(events);
+        log.info("Seeded {} DEMO usage events (fictional, demo=true).", events.size());
     }
 
     private Marks rosterFor(Map<String, Marks> rosters, Course course) {
