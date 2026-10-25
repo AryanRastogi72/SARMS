@@ -25,6 +25,16 @@ This file separates the original team project from work done after the fork.
 - **Postman**: folder "8. Analytics & Usage" with 9 requests for the new endpoints, including access-denied cases (collection now 37 requests).
 - **Demo data seeder** (`DemoDataSeeder`): 40 fictional students with roll numbers `DEMO-*`, plus 30 days of fictional page-view events (`demo=true`). Analytics and usage views show a "Demo data" badge whenever these records are present. Disable with `sarms.demo-data=false`.
 
+### Security
+- **Password reset required only a user ID** (found during the post-fork end-to-end run). `POST /api/auth/forgot-password` in v1.0 reset any account, including admin accounts, given just its ID. Now:
+  - the email on the student or faculty record must match (case-insensitive);
+  - admin accounts can't be reset through this endpoint (they have no email on file);
+  - unknown IDs, wrong emails and admin IDs all get the same error, so the endpoint can't be used to check which IDs exist;
+  - the login page's reset form asks for the registered email.
+  - Known limit: knowing someone's email is weak proof. The proper fix is an emailed one-time reset link, which needs email sending (on the v1.0 "future enhancements" list).
+  - Unit tests: `AuthServiceResetTest` (6 tests). Postman folder "9. Security Fix: Password Reset" (4 requests).
+  - Side effect: the team's Selenium `ForgotPasswordTest` resets `ADM-001` by ID and now fails by design.
+
 ## [1.0.0] — original team project (at fork point `ef77690`)
 
 ### Features

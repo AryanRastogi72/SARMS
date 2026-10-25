@@ -391,6 +391,35 @@ analyticsItems.push(createRequest(
 
 collection.item.push({ name: "8. Analytics & Usage (solo addition)", item: analyticsItems });
 
+// 9. SECURITY FIX (solo addition after fork): password reset needs the email on file; admins can't self-reset
+const securityItems = [];
+
+securityItems.push(createRequest(
+    "1. Reset - Admin by ID Only (Rejected)", "POST", "/auth/forgot-password", "none",
+    { userId: "ADM-001", email: "admin@mrca.edu", newPassword: "hacked123" },
+    `pm.test("Status 400", function () { pm.response.to.have.status(400); });`
+));
+
+securityItems.push(createRequest(
+    "2. Reset - Admin Password Unchanged", "POST", "/auth/login", "none",
+    { userId: "{{adminUserId}}", password: "{{adminPassword}}" },
+    `pm.test("Admin can still log in with the original password", function () { pm.response.to.have.status(200); });`
+));
+
+securityItems.push(createRequest(
+    "3. Reset - Student with Wrong Email (Rejected)", "POST", "/auth/forgot-password", "none",
+    { userId: "DEMO-CSE-02", email: "attacker@example.com", newPassword: "hacked123" },
+    `pm.test("Status 400", function () { pm.response.to.have.status(400); });`
+));
+
+securityItems.push(createRequest(
+    "4. Reset - Student with Email on File", "POST", "/auth/forgot-password", "none",
+    { userId: "DEMO-CSE-02", email: "demo-cse-02@demo.invalid", newPassword: "password123" },
+    `pm.test("Status 200", function () { pm.response.to.have.status(200); });`
+));
+
+collection.item.push({ name: "9. Security Fix: Password Reset (solo addition)", item: securityItems });
+
 // Write the file
 fs.writeFileSync('SARMS_Postman_Collection.json', JSON.stringify(collection, null, 2));
 console.log("Postman collection generated successfully.");

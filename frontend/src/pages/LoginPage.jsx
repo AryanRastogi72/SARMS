@@ -26,6 +26,7 @@ export default function LoginPage() {
   // 'login', 'forgot-1', 'forgot-2', 'forgot-success'
   const [view, setView]                     = useState('login'); 
   const [forgotId, setForgotId]             = useState('');
+  const [forgotEmail, setForgotEmail]       = useState('');
   const [newPassword, setNewPassword]       = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotError, setForgotError]       = useState('');
@@ -48,8 +49,8 @@ export default function LoginPage() {
   function handleForgotStep1(e) {
     e.preventDefault();
     setForgotError('');
-    if (!forgotId.trim()) {
-      setForgotError('Please enter your ID');
+    if (!forgotId.trim() || !forgotEmail.trim()) {
+      setForgotError('Please enter your ID and registered email');
       return;
     }
     setView('forgot-2');
@@ -70,10 +71,12 @@ export default function LoginPage() {
     try {
       await api.post('/auth/forgot-password', {
         userId: forgotId.trim(),
+        email: forgotEmail.trim(),
         newPassword: newPassword
       });
       setView('forgot-success');
       setForgotId('');
+      setForgotEmail('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
@@ -203,7 +206,7 @@ export default function LoginPage() {
             <div className="animate-fade-in">
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-navy mb-2">Reset Password</h2>
-                <p className="text-sm text-gray-500 font-medium">Step 1: Enter your University ID to verify your account.</p>
+                <p className="text-sm text-gray-500 font-medium">Step 1: Enter your University ID and the email on your record.</p>
               </div>
 
               <form onSubmit={handleForgotStep1} className="space-y-5">
@@ -217,6 +220,21 @@ export default function LoginPage() {
                     onChange={e => setForgotId(e.target.value)} 
                     required
                     placeholder="Enter your ID"
+                    className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-gold/20 focus:border-gold transition-all duration-200 bg-gray-50 placeholder-gray-400 font-medium text-navy"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">
+                    Registered Email <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    placeholder="Enter the email on your record"
                     className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-gold/20 focus:border-gold transition-all duration-200 bg-gray-50 placeholder-gray-400 font-medium text-navy"
                   />
                 </div>
