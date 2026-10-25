@@ -25,6 +25,7 @@ import TermControl from './pages/admin/TermControl';
 
 // Solo additions after fork
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import StudentProgress from './pages/student/StudentProgress';
 
 /**
  * App, top-level router.
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="courses" element={<MyCourses />} />
             <Route path="registration" element={<CourseRegistration />} />
             <Route path="report" element={<AcademicReport />} />
+            <Route path="progress" element={<StudentProgress />} />
           </Route>
 
           {/* ── Faculty Portal ────────────────────────────── */}

@@ -3,6 +3,7 @@ package com.sarms.service;
 import com.sarms.model.Course;
 import com.sarms.model.Marks;
 import com.sarms.model.Student;
+import com.sarms.repository.AppConfigRepository;
 import com.sarms.repository.CourseRepository;
 import com.sarms.repository.MarksRepository;
 import com.sarms.repository.StudentRepository;
@@ -32,22 +33,46 @@ public class AnalyticsService {
     public record AttentionFlag(String rollNo, String studentName, String courseCode, String courseName,
                                 Double currentPercent, Double cgpa, List<String> reasons) {}
 
+    public record SemesterPoint(int semester, double sgpa, double cgpa, double creditsEarned) {}
+
+    public record Progress(String rollNo, String name, Double cgpa, Double cgpaChange, List<SemesterPoint> semesters,
+                           double creditsRequired, double creditsEarned, double creditsInProgress,
+                           double creditsFailed, double creditsRemaining, int semestersLeft,
+                           Double creditsPerSemesterNeeded, int maxCreditsPerSemester, boolean onTrack,
+                           boolean demoData) {}
+
+    static final int TOTAL_SEMESTERS = 8;
+
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
     private final MarksRepository marksRepository;
+    private final AppConfigRepository appConfigRepository;
     private final double passPercent;
     private final double cgpaCutoff;
+    private final double graduationCredits;
 
     public AnalyticsService(StudentRepository studentRepository,
                             CourseRepository courseRepository,
                             MarksRepository marksRepository,
+                            AppConfigRepository appConfigRepository,
                             @Value("${sarms.analytics.pass-percent:40}") double passPercent,
-                            @Value("${sarms.analytics.cgpa-cutoff:5.0}") double cgpaCutoff) {
+                            @Value("${sarms.analytics.cgpa-cutoff:5.0}") double cgpaCutoff,
+                            @Value("${sarms.graduation-credits:160}") double graduationCredits) {
         this.studentRepository = studentRepository;
         this.courseRepository = courseRepository;
         this.marksRepository = marksRepository;
+        this.appConfigRepository = appConfigRepository;
         this.passPercent = passPercent;
         this.cgpaCutoff = cgpaCutoff;
+        this.graduationCredits = graduationCredits;
+    }
+
+    public Progress progress(String rollNo) {
+        Student s = studentRepository.findByRollNo(rollNo)
+                .orElseThrow(() -> new RuntimeException("Student not found: " + rollNo));
+        int maxCredits = appConfigRepository.findByKey("maxCredits")
+                .map(c -> c.getValue() instanceof Number n ? n.intValue() : 25).orElse(25);
+        return computeProgress(s, graduationCredits, maxCredits);
     }
 
     /** @param facultyId null for admin (all courses), otherwise only that faculty's courses */
@@ -154,6 +179,49 @@ public class AnalyticsService {
             reasons.add("CGPA " + cgpa + " is below " + cgpaCutoff);
         }
         return reasons;
+    }
+
+    /** CGPA trend and graduation progress. A semester counts as completed once none of its courses are "IP". */
+    static Progress computeProgress(Student s, double creditsRequired, int maxCredits) {
+        List<Student.SemesterRecord> records = s.getAcademicRecord().stream()
+                .sorted(Comparator.comparingInt(Student.SemesterRecord::getSemester)).toList();
+        List<SemesterPoint> points = new ArrayList<>();
+        double earned = 0, inProgress = 0, failed = 0, cumCredits = 0, cumPoints = 0;
+        int completed = 0;
+
+        for (Student.SemesterRecord rec : records) {
+            double semCredits = 0, semPoints = 0;
+            boolean anyIp = false;
+            for (Student.CourseGrade cg : rec.getCourses()) {
+                if (GRADE_ORDER.contains(cg.getGrade())) {
+                    double gp = MarksService.getGradePoints(cg.getGrade());
+                    semCredits += cg.getCredits();
+                    semPoints += cg.getCredits() * gp;
+                    if ("F".equals(cg.getGrade())) failed += cg.getCredits(); else earned += cg.getCredits();
+                } else {
+                    anyIp = true;
+                    inProgress += cg.getCredits();
+                }
+            }
+            if (!anyIp && semCredits > 0) completed++;
+            if (semCredits > 0) {
+                cumCredits += semCredits;
+                cumPoints += semPoints;
+                points.add(new SemesterPoint(rec.getSemester(), round2(semPoints / semCredits),
+                        round2(cumPoints / cumCredits), earned));
+            }
+        }
+
+        double remaining = Math.max(0, creditsRequired - earned);
+        int semestersLeft = Math.max(0, TOTAL_SEMESTERS - completed);
+        Double perSem = semestersLeft == 0 ? null : round2(remaining / semestersLeft);
+        boolean onTrack = remaining == 0 || (perSem != null && perSem <= maxCredits);
+        Double cgpa = points.isEmpty() ? null : points.get(points.size() - 1).cgpa();
+        Double change = points.size() < 2 ? null
+                : round2(points.get(points.size() - 1).cgpa() - points.get(points.size() - 2).cgpa());
+
+        return new Progress(s.getRollNo(), s.getName(), cgpa, change, points, creditsRequired, earned, inProgress,
+                failed, remaining, semestersLeft, perSem, maxCredits, onTrack, hasDemo(List.of(s)));
     }
 
     static boolean hasDemo(Collection<Student> students) {

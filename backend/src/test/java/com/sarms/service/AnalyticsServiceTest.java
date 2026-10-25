@@ -79,4 +79,67 @@ class AnalyticsServiceTest {
         assertFalse(AnalyticsService.hasDemo(List.of(real)));
         assertTrue(AnalyticsService.hasDemo(List.of(real, demo)));
     }
+
+    private static Student.SemesterRecord sem(int n, String... grades) {
+        Student.SemesterRecord rec = new Student.SemesterRecord();
+        rec.setSemester(n);
+        for (int i = 0; i < grades.length; i++) {
+            rec.getCourses().add(new Student.CourseGrade("C" + n + i, "c", 4, grades[i], MarksService.getGradePoints(grades[i])));
+        }
+        return rec;
+    }
+
+    @Test
+    void progressTracksCgpaTrendAndCredits() {
+        Student s = new Student();
+        s.setRollNo("STUD-2024-001");
+        // stored out of order on purpose: progress must sort by semester
+        s.getAcademicRecord().add(sem(2, "A", "F"));        // sgpa 4.5
+        s.getAcademicRecord().add(sem(1, "A+", "B"));       // sgpa 8.5
+        s.getAcademicRecord().add(sem(3, "IP", "IP"));      // current semester
+
+        var p = AnalyticsService.computeProgress(s, 40, 25);
+
+        assertEquals(List.of(1, 2), p.semesters().stream().map(AnalyticsService.SemesterPoint::semester).toList());
+        assertEquals(8.5, p.semesters().get(0).cgpa());
+        assertEquals(6.5, p.cgpa());                       // (10+7+9+0)*4 / 16
+        assertEquals(-2.0, p.cgpaChange());
+        assertEquals(12, p.creditsEarned());              // F credits are not earned
+        assertEquals(4, p.creditsFailed());
+        assertEquals(8, p.creditsInProgress());
+        assertEquals(28, p.creditsRemaining());
+        assertEquals(6, p.semestersLeft());                // 8 total - 2 completed
+        assertEquals(4.67, p.creditsPerSemesterNeeded());
+        assertTrue(p.onTrack());
+        assertFalse(p.demoData());
+    }
+
+    @Test
+    void progressIsOffTrackWhenRemainingCreditsExceedTheCap() {
+        Student s = new Student();
+        s.setRollNo("DEMO-CSE-01");
+        for (int n = 1; n <= 7; n++) s.getAcademicRecord().add(sem(n, "B"));   // 28 credits after 7 semesters
+
+        var p = AnalyticsService.computeProgress(s, 160, 25);
+
+        assertEquals(1, p.semestersLeft());
+        assertEquals(132, p.creditsPerSemesterNeeded());
+        assertFalse(p.onTrack());
+        assertTrue(p.demoData());
+    }
+
+    @Test
+    void progressForNewStudentHasNoCgpaYet() {
+        Student s = new Student();
+        s.setRollNo("STUD-2026-001");
+        s.getAcademicRecord().add(sem(1, "IP", "IP"));
+
+        var p = AnalyticsService.computeProgress(s, 160, 25);
+
+        assertNull(p.cgpa());
+        assertNull(p.cgpaChange());
+        assertTrue(p.semesters().isEmpty());
+        assertEquals(8, p.semestersLeft());
+        assertEquals(20, p.creditsPerSemesterNeeded());
+    }
 }

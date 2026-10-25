@@ -15,6 +15,9 @@ This file separates the original team project from work done after the fork.
   - "needs attention" list for the active semester: marks below the pass line (scored only against components entered so far) or CGPA below a cut-off, each with its reason. Thresholds are config values.
   - API: `GET /api/analytics/courses`, `GET /api/analytics/attention` (admin + faculty).
   - Unit tests: `AnalyticsServiceTest` (6 tests).
+- **Student progress view** (PRD US-3, US-4) at `/student/progress`: CGPA trend line with SGPA per semester, credits earned / in progress / remaining against a configurable graduation requirement (`sarms.graduation-credits`, default 160), and the credits-per-semester pace needed versus the registration cap.
+  - API: `GET /api/analytics/progress/{rollNo}`; students can read only their own, staff can read any.
+  - Unit tests: 3 progress tests in `AnalyticsServiceTest`, access rules in `AnalyticsControllerTest` (3 tests).
 - **Demo data seeder** (`DemoDataSeeder`): 40 fictional students with roll numbers `DEMO-*`. Analytics views show a "Demo data" badge whenever these records are present. Disable with `sarms.demo-data=false`.
 
 ## [1.0.0] — original team project (at fork point `ef77690`)
