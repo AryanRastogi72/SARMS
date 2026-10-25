@@ -247,7 +247,15 @@ App is live at `http://localhost:5173`.
 
 ---
 
+## Credits
+
+SARMS started as a four-person team project at [top-of-the-code/SARMS](https://github.com/top-of-the-code/SARMS), built by the contributors below. Everything up to and including commit `ef77690` (the fork point) is shared team work.
+
+This repository is a fork maintained by Aryan Rastogi. **Every change after the fork point is my solo work.** See [CHANGELOG.md](CHANGELOG.md) for a line-by-line split between the original team's features and my additions.
+
 ## Contributors
+
+Original team project:
 
 <table>
   <tr>
