@@ -48,6 +48,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/students/register").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/students/*/grades").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Analytics (solo addition after fork)
+                .requestMatchers("/api/analytics/courses", "/api/analytics/attention").hasAnyRole("ADMIN", "FACULTY")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )

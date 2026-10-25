@@ -5,7 +5,7 @@ import api from '../services/api';
 import {
   LayoutDashboard, Clock, BookOpen, BarChart2,
   BookMarked, Edit3, Users, GraduationCap,
-  UserPlus, LogOut, ChevronRight,
+  UserPlus, LogOut, ChevronRight, PieChart,
 } from 'lucide-react';
 
 // ── Nav link definitions per role ─────────────────────────────
@@ -18,6 +18,7 @@ const NAV_LINKS = {
   faculty: [
     { to: '/faculty/courses', label: 'Course Management', Icon: BookMarked },
     { to: '/faculty/marks', label: 'Marks Management', Icon: Edit3 },
+    { to: '/faculty/analytics', label: 'Analytics', Icon: PieChart },
   ],
   admin: [
     { to: '/admin/courses', label: 'Course Management', Icon: BookMarked },
@@ -25,6 +26,7 @@ const NAV_LINKS = {
     { to: '/admin/register', label: 'Student Registration', Icon: UserPlus },
     { to: '/admin/results', label: 'Upload Results', Icon: BarChart2 },
     { to: '/admin/term-control', label: 'Term Control', Icon: Clock },
+    { to: '/admin/analytics', label: 'Analytics', Icon: PieChart },
   ],
 };
 

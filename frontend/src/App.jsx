@@ -23,6 +23,9 @@ import StudentRegistration from './pages/admin/StudentRegistration';
 import UploadResults from './pages/admin/UploadResults';
 import TermControl from './pages/admin/TermControl';
 
+// Solo additions after fork
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+
 /**
  * App, top-level router.
  * All authenticated portals are wrapped in Layout (sidebar + header).
@@ -65,6 +68,7 @@ export default function App() {
             <Route index element={<Navigate to="courses" replace />} />
             <Route path="courses" element={<CourseManagement />} />
             <Route path="marks" element={<MarksManagement />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
           </Route>
 
           {/* ── Admin Portal ──────────────────────────────── */}
@@ -82,6 +86,7 @@ export default function App() {
             <Route path="register" element={<StudentRegistration />} />
             <Route path="results" element={<UploadResults />} />
             <Route path="term-control" element={<TermControl />} />
+            <Route path="analytics" element={<AnalyticsDashboard showFilters />} />
           </Route>
 
           {/* ── Catch-all ─────────────────────────────────── */}

@@ -10,6 +10,12 @@ This file separates the original team project from work done after the fork.
 ### Added
 - `CHANGELOG.md` (this file) and a Credits section in the README.
 - `product/` folder: problem statement, personas, PRD for the next version, and a development process document.
+- **Academic analytics dashboard** (PRD US-1, US-2, US-5) for admins (`/admin/analytics`) and faculty (`/faculty/analytics`, own courses only):
+  - pass rate and grade distribution per course from final grades, with department/semester filters for admins;
+  - "needs attention" list for the active semester: marks below the pass line (scored only against components entered so far) or CGPA below a cut-off, each with its reason. Thresholds are config values.
+  - API: `GET /api/analytics/courses`, `GET /api/analytics/attention` (admin + faculty).
+  - Unit tests: `AnalyticsServiceTest` (6 tests).
+- **Demo data seeder** (`DemoDataSeeder`): 40 fictional students with roll numbers `DEMO-*`. Analytics views show a "Demo data" badge whenever these records are present. Disable with `sarms.demo-data=false`.
 
 ## [1.0.0] — original team project (at fork point `ef77690`)
 
